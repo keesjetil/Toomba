@@ -1,0 +1,1 @@
+to start the container run docker-compose up -d
