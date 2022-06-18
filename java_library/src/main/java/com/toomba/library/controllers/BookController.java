@@ -1,10 +1,10 @@
 package com.toomba.library.controllers;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.toomba.library.models.Book;
 import com.toomba.library.repositories.BookRepository;
-import com.toomba.library.repositories.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +29,18 @@ public class BookController {
     //TODO: Ga de excepties nog even na....
 
     private final BookRepository bookRepository;
-    private final CategoryRepository categoryRepository;
+
+    @Transactional
+    @GetMapping("/all")
+    public ResponseEntity getBooks() {
+        List<Book> booksFound = bookRepository.findAll();
+
+        if (booksFound != null && !booksFound.isEmpty()) {
+            return new ResponseEntity(booksFound, HttpStatus.OK);
+        } else {
+            return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
+        }
+    }
 
     @Transactional
     @GetMapping("/{id}")
