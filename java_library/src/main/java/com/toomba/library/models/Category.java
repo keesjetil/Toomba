@@ -21,8 +21,8 @@ public class Category {
 
     private String title;
 
-//    @ManyToMany(mappedBy="categories")
-//    private Set<Book> books;
+    @ManyToMany(mappedBy="categories")
+    private Set<Book> books;
 
     public Category(String title) {
         this.title = title;
