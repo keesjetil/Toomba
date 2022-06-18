@@ -24,12 +24,12 @@ public class Book {
     private String title;
     private String description;
 
-//    @ManyToMany
-//    @JoinTable(
-//            name="Book_Category",
-//            joinColumns = @JoinColumn(name = "book_id"),
-//            inverseJoinColumns = @JoinColumn(name = "category_id"))
-//    private Set<Category> categories;
+    @ManyToMany
+    @JoinTable(
+            name="book_category",
+            joinColumns = @JoinColumn(name = "book_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id"))
+    private Set<Category> categories;
 
     public Book(String title, double price) {
         this.title = title;
