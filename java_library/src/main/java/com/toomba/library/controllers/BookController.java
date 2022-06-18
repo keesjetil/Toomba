@@ -38,7 +38,7 @@ public class BookController {
         if (booksFound != null && !booksFound.isEmpty()) {
             return new ResponseEntity(booksFound, HttpStatus.OK);
         } else {
-            return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
+            return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.NOT_FOUND);
         }
     }
 
@@ -59,10 +59,8 @@ public class BookController {
         Optional<Book> bookFound = bookRepository.findById(id);
         if (bookFound.isPresent()) {
             bookRepository.delete(bookFound.get());
-            return new ResponseEntity(bookFound.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @PostMapping

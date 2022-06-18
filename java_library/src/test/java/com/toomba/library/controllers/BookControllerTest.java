@@ -78,7 +78,6 @@ class BookControllerTest {
     void deleteBook() {
         givenBookExists();
         whenDeleteBook();
-        thenBookRetrieved();
         thenBookIsRemoved();
     }
 
@@ -135,6 +134,7 @@ class BookControllerTest {
     }
 
     private void thenBookIsRemoved(){
+        assertEquals(resultStatus, HttpStatus.OK);
         assertFalse(bookRepository.findById(testBook.getId()).isPresent());
     }
 

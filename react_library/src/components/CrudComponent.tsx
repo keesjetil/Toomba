@@ -1,25 +1,61 @@
 //TODO: split this into multiple components, for the sake of speed i did not do this...
-import { Button, Card, Checkbox, Col, Form, Input, Row, Select } from 'antd';
+import { Button, Card, Checkbox, Col, Form, Input, List, Row, Select, Typography } from 'antd';
+import axios from 'axios';
 import React, { Component } from 'react';
+import getBooks from '../api/api';
 
 const { Option } = Select;
 
 type CrudState = {
-  value: number;
+  books: any[];
 };
 
 class CrudComponent extends React.Component<{}, CrudState> {
 
   state: CrudState = {
-    value: 0,
+    books: [],
   };
 
-  componentDidMount(){
-    console.log("hi")
+  componentDidMount() {
+    this.getBooks()
   }
 
+  deleteBookById(id:any){
+    axios({
+      method: 'delete',
+      url: `http://localhost:8080/api/book/${id}`,
+    }).then(() => {
+      this.getBooks()
+    }).catch(e => {
+      console.log(e)
+    })
+  }
+
+  getBooks() {
+    axios({
+      method: 'get',
+      url: 'http://localhost:8080/api/book/all',
+    }).then(response => {
+      this.setState({ books: response.data })
+    }).catch(e => {
+      this.setState({ books: [] })
+    })
+  }
+
+  getCategories() {
+    axios({
+      method: 'get',
+      url: 'http://localhost:8080/api/category/all',
+    }).then(response => {
+      this.setState({ books: response.data })
+    }).catch(e => {
+      this.setState({ books: [] })
+    })
+  }
+
+  
+
   render() {
-    const { value } = this.state;
     const onFinish = (values: any) => {
       console.log('Success:', values);
     };
@@ -78,7 +114,6 @@ class CrudComponent extends React.Component<{}, CrudState> {
                       allowClear
                       style={{ width: '100%' }}
                       placeholder="Please select"
-                      defaultValue={['a10', 'c12']}
                       onChange={handleChange}
                     >
                       {children}
@@ -121,7 +156,29 @@ class CrudComponent extends React.Component<{}, CrudState> {
               </Card>
             </Row>
           </Col>
-          <Col span={12}>col-12</Col>
+          <Col span={12}>
+             <List
+              style={{margin:20}}
+              header={<div>Books</div>}
+              bordered
+              dataSource={this.state.books}
+              renderItem={item => (
+                <List.Item>
+                  <Typography.Text>{item.id}</Typography.Text>
+                  <Typography.Text>Title: <strong>{item.title}</strong></Typography.Text>
+                  <Typography.Text>Description: <strong>{item.description}</strong></Typography.Text>
+                  <Typography.Text>Author: <strong>{item.author}</strong></Typography.Text>
+                  <Typography.Text>Categories: <strong>{item.categories}</strong></Typography.Text>
+                  <Button type="primary">
+                    Edit
+                  </Button>
+                  <Button type="primary" danger onClick={() => this.deleteBookById(item.id)}>
+                    Delete
+                  </Button>
+                </List.Item>
+              )}
+            />
+          </Col>
         </Row>
       </>
     );
