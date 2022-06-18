@@ -1,13 +1,8 @@
 package com.toomba.library.controllers;
 
 import java.util.Optional;
-import java.util.Set;
 
-import javax.persistence.Id;
-
-import com.toomba.library.models.Book;
 import com.toomba.library.models.Category;
-import com.toomba.library.repositories.BookRepository;
 import com.toomba.library.repositories.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -34,9 +29,9 @@ public class CategoryController {
     @GetMapping("/{id}")
     public ResponseEntity getCategory(@PathVariable Long id) {
         Optional<Category> categoryFound = categoryRepository.findById(id);
-        if(categoryFound.isPresent()){
+        if (categoryFound.isPresent()) {
             return new ResponseEntity(categoryFound.get(), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
@@ -44,29 +39,29 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteCategory(@PathVariable Long id) {
         Optional<Category> categoryFound = categoryRepository.findById(id);
-        if(categoryFound.isPresent()) {
+        if (categoryFound.isPresent()) {
             categoryRepository.delete(categoryFound.get());
             return new ResponseEntity(categoryFound.get(), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
 
     @PostMapping
-    public  ResponseEntity createCategory(Category category) {
-        if(category != null){
+    public ResponseEntity createCategory(Category category) {
+        if (category != null) {
             return new ResponseEntity(categoryRepository.save(category), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
 
     @PutMapping
-    public  ResponseEntity updateCategory(Category category) {
+    public ResponseEntity updateCategory(Category category) {
         Optional<Category> categoryFound = categoryRepository.findById(category.getId());
-        if(category != null){
+        if (category != null) {
             return new ResponseEntity(categoryRepository.save(category), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
