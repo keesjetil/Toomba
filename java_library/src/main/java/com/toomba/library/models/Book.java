@@ -2,7 +2,6 @@ package com.toomba.library.models;
 
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -27,7 +26,9 @@ public class Book {
     private Long id;
 
     private String title;
+
     private String description;
+
     private String author;
 
     @ManyToMany(fetch = FetchType.LAZY)
