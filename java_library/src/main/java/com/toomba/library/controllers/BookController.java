@@ -4,11 +4,13 @@ import java.util.Optional;
 
 import com.toomba.library.models.Book;
 import com.toomba.library.repositories.BookRepository;
+import com.toomba.library.repositories.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +29,16 @@ public class BookController {
     //TODO: Ga de excepties nog even na....
 
     private final BookRepository bookRepository;
+    private final CategoryRepository categoryRepository;
 
+    @Transactional
     @GetMapping("/{id}")
     public ResponseEntity getBook(@PathVariable Long id) {
         Optional<Book> bookFound = bookRepository.findById(id);
-        if(bookFound.isPresent()){
+
+        if (bookFound.isPresent()) {
             return new ResponseEntity(bookFound.get(), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
@@ -41,19 +46,19 @@ public class BookController {
     @DeleteMapping("/{id}")
     public ResponseEntity deleteBook(@PathVariable Long id) {
         Optional<Book> bookFound = bookRepository.findById(id);
-        if(bookFound.isPresent()) {
+        if (bookFound.isPresent()) {
             bookRepository.delete(bookFound.get());
             return new ResponseEntity(bookFound.get(), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
 
     @PostMapping
-    public  ResponseEntity createBook(Book book) {
-        if(book != null){
+    public ResponseEntity createBook(Book book) {
+        if (book != null) {
             return new ResponseEntity(bookRepository.save(book), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
@@ -61,9 +66,9 @@ public class BookController {
     @PutMapping
     public ResponseEntity updateBook(Book book) {
         Optional<Book> bookFound = bookRepository.findById(book.getId());
-        if(bookFound.isPresent()) {
+        if (bookFound.isPresent()) {
             return new ResponseEntity(bookRepository.save(book), HttpStatus.OK);
-        }else{
+        } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
     }
