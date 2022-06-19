@@ -1,26 +1,55 @@
 //TODO: split this into multiple components, for the sake of speed i did not do this...
+import { BookFilled } from '@ant-design/icons';
 import { Button, Card, Checkbox, Col, Form, Input, List, Row, Select, Typography } from 'antd';
 import axios from 'axios';
 import React, { Component } from 'react';
-import getBooks from '../api/api';
 
 const { Option } = Select;
 
+interface Category {
+  id: string;
+  title: string;
+  books: any;
+}
+
 type CrudState = {
   books: any[];
+  categories: Category[];
 };
 
 class CrudComponent extends React.Component<{}, CrudState> {
 
   state: CrudState = {
     books: [],
+    categories: []
   };
 
   componentDidMount() {
-    this.getBooks()
+    this.getBooks();
+    this.getCategories();
   }
 
-  deleteBookById(id:any){
+  createBook(book: any) {
+    console.log("MY BOOK: ", book)
+    console.log(JSON.stringify(book))
+    axios.post("http://localhost:8080/api/book", book).then(() => {
+      this.getBooks()
+    }).catch(e => {
+      console.log(e)
+    })
+  }
+
+  createCategory(category: any) {
+    console.log("CATEGORYTOPOST: ", category)
+    axios.post("http://localhost:8080/api/category", category).then((response) => {
+      console.log(response)
+      this.getCategories()
+    }).catch(e => {
+      console.log(e)
+    })
+  }
+
+  deleteBookById(id: any) {
     axios({
       method: 'delete',
       url: `http://localhost:8080/api/book/${id}`,
@@ -36,7 +65,13 @@ class CrudComponent extends React.Component<{}, CrudState> {
       method: 'get',
       url: 'http://localhost:8080/api/book/all',
     }).then(response => {
-      this.setState({ books: response.data })
+      console.log("MY REPONSE: ", response)
+      if (response.data.length) {
+        this.setState({ books: response.data })
+      } else {
+        this.setState({ books: [] })
+      }
+
     }).catch(e => {
       this.setState({ books: [] })
     })
@@ -47,31 +82,52 @@ class CrudComponent extends React.Component<{}, CrudState> {
       method: 'get',
       url: 'http://localhost:8080/api/category/all',
     }).then(response => {
-      this.setState({ books: response.data })
+      this.setState({ categories: response.data })
     }).catch(e => {
-      this.setState({ books: [] })
+      this.setState({ categories: [] })
     })
   }
 
-  
+
 
   render() {
-    const onFinish = (values: any) => {
-      console.log('Success:', values);
+    const onFinishCategory = (values: any) => {
+      this.createCategory(values)
+    };
+
+    const onFinishBook = (values: any) => {
+      const categories: Category[] = []
+      values.categories.forEach((category: string) => {
+        const categoryFound = this.state.categories.filter(categoryState => {
+          return category == categoryState.id
+        })[0]
+        delete categoryFound.books
+        categories.push(categoryFound)
+      })
+      values.categories = categories
+      this.createBook(values)
     };
 
     const onFinishFailed = (errorInfo: any) => {
       console.log('Failed:', errorInfo);
     };
 
+
     const children = [];
-    for (let i = 10; i < 36; i++) {
-      children.push(<Option key={i.toString(36) + i}>{i.toString(36) + i}</Option>);
+    console.log("IN RENDER: ", this.state.categories)
+    if (this.state.categories.length > 0) {
+      for (const category of this.state.categories) {
+        children.push(<Option key={category.id}>{category.title}</Option>);
+      }
     }
 
     const handleChange = (value: string[]) => {
       console.log(`selected ${value}`);
     };
+
+    const renderCategories = (categories: { title: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; }[]) => {
+      categories.forEach((item: { title: string | number | boolean | React.ReactElement<any, string | React.JSXElementConstructor<any>> | React.ReactFragment | React.ReactPortal | null | undefined; }) => <Typography.Text>Categories: <strong>{item.title}</strong></Typography.Text>)
+    }
 
     return (
       <>
@@ -84,30 +140,38 @@ class CrudComponent extends React.Component<{}, CrudState> {
                   labelCol={{ span: 8 }}
                   wrapperCol={{ span: 16 }}
                   initialValues={{ remember: true }}
-                  onFinish={onFinish}
+                  onFinish={onFinishBook}
                   onFinishFailed={onFinishFailed}
                   autoComplete="off"
                 >
                   <Form.Item
-                    label="Title"
-                    name="Title"
-                    rules={[{ required: true, message: 'Een book moet een auteur hebben' }]}
+                    label="title"
+                    name="title"
+                    rules={[{ required: true, message: 'A book must have a title' }]}
                   >
                     <Input />
                   </Form.Item>
 
                   <Form.Item
-                    label="Description"
-                    name="Description"
-                    rules={[{ required: true, message: 'Please input your password!' }]}
+                    label="author"
+                    name="author"
+                    rules={[{ required: true, message: 'A book must have a author' }]}
+                  >
+                    <Input />
+                  </Form.Item>
+
+                  <Form.Item
+                    label="description"
+                    name="description"
+                    rules={[{ required: true, message: 'a book must have a description' }]}
                   >
                     <Input.Password />
                   </Form.Item>
 
                   <Form.Item
-                    label="Categories"
-                    name="Categories"
-                    rules={[{ required: true, message: 'Please input your password!' }]}
+                    label="categories"
+                    name="categories"
+                    rules={[{ required: true, message: 'a book must contain at least one category' }]}
                   >
                     <Select
                       mode="multiple"
@@ -135,7 +199,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
                   labelCol={{ span: 8 }}
                   wrapperCol={{ span: 16 }}
                   initialValues={{ remember: true }}
-                  onFinish={onFinish}
+                  onFinish={onFinishCategory}
                   onFinishFailed={onFinishFailed}
                   autoComplete="off"
                 >
@@ -157,26 +221,28 @@ class CrudComponent extends React.Component<{}, CrudState> {
             </Row>
           </Col>
           <Col span={12}>
-             <List
-              style={{margin:20}}
+            <List
+              style={{ margin: 20 }}
               header={<div>Books</div>}
               bordered
               dataSource={this.state.books}
-              renderItem={item => (
-                <List.Item>
-                  <Typography.Text>{item.id}</Typography.Text>
-                  <Typography.Text>Title: <strong>{item.title}</strong></Typography.Text>
-                  <Typography.Text>Description: <strong>{item.description}</strong></Typography.Text>
-                  <Typography.Text>Author: <strong>{item.author}</strong></Typography.Text>
-                  <Typography.Text>Categories: <strong>{item.categories}</strong></Typography.Text>
-                  <Button type="primary">
-                    Edit
-                  </Button>
-                  <Button type="primary" danger onClick={() => this.deleteBookById(item.id)}>
-                    Delete
-                  </Button>
-                </List.Item>
-              )}
+              renderItem={item => {
+                return (
+                  <List.Item>
+                    <Typography.Text>{item.id}</Typography.Text>
+                    <Typography.Text>Title: <strong>{item.title}</strong></Typography.Text>
+                    <Typography.Text>Description: <strong>{item.description}</strong></Typography.Text>
+                    <Typography.Text>Author: <strong>{item.author}</strong></Typography.Text>
+                    <Typography.Text>Categorie: <strong>{JSON.stringify(item.categories)}</strong></Typography.Text>
+                    <Button type="primary">
+                      Edit
+                    </Button>
+                    <Button type="primary" danger onClick={() => this.deleteBookById(item.id)}>
+                      Delete
+                    </Button>
+                  </List.Item>
+                )
+              }}
             />
           </Col>
         </Row>
