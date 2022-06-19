@@ -2,9 +2,13 @@ package com.toomba.library.controllers;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.toomba.library.models.Book;
 import com.toomba.library.models.Category;
 import com.toomba.library.repositories.BookRepository;
@@ -41,7 +45,7 @@ class BookControllerTest {
     @BeforeAll
     @Transactional
     public void setup() {
-        categories = new HashSet();
+        categories = new HashSet<>();
         categoryRepository.save(new Category("Horror"));
         categoryRepository.save(new Category("Comedy"));
         categoryRepository.findAll().forEach(category -> categories.add(category));
@@ -58,7 +62,7 @@ class BookControllerTest {
     }
 
     @Test
-    void createBook() {
+    void createBook() throws JsonProcessingException {
         givenCreatedBook();
         whenCreateBook();
         thenBookRetrieved();
@@ -105,7 +109,7 @@ class BookControllerTest {
         resultBook = (Book) result.getBody();
     }
 
-    private void whenCreateBook(){
+    private void whenCreateBook() throws JsonProcessingException {
         ResponseEntity result = bookController.createBook(testBook);
         resultStatus = result.getStatusCode();
         resultBook = (Book) result.getBody();

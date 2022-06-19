@@ -1,5 +1,6 @@
 package com.toomba.library.models;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -7,6 +8,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -25,7 +29,8 @@ public class Category {
     private String title;
 
     @ManyToMany(mappedBy="categories")
-    private Set<Book> books;
+    @JsonIgnore
+    private Set<Book> book;
 
     public Category(String title) {
         this.title = title;
