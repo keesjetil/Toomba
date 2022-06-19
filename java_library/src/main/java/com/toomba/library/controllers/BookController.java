@@ -32,7 +32,6 @@ public class BookController {
 
     private final BookRepository bookRepository;
 
-    @Transactional
     @GetMapping("/all")
     public ResponseEntity getBooks() {
         List<Book> booksFound = bookRepository.findAll();
@@ -44,7 +43,6 @@ public class BookController {
         }
     }
 
-    @Transactional
     @GetMapping("/{id}")
     public ResponseEntity getBook(@PathVariable Long id) {
         Optional<Book> bookFound = bookRepository.findById(id);
@@ -84,7 +82,7 @@ public class BookController {
     }
 
     @PutMapping
-    public ResponseEntity updateBook(Book book) {
+    public ResponseEntity updateBook(@RequestBody Book book) {
         if (book.getCategories() == null
                 || book.getAuthor() == null
                 || book.getDescription() == null

@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.toomba.library.models.Category;
+import com.toomba.library.repositories.BookRepository;
 import com.toomba.library.repositories.CategoryRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -31,8 +32,8 @@ import utils.EmptyJsonResponse;
 public class CategoryController {
 
     private final CategoryRepository categoryRepository;
+    private final BookRepository bookRepository;
 
-    @Transactional
     @GetMapping("/all")
     public ResponseEntity getCategories() {
         List<Category> categoriesFound = categoryRepository.findAll();
@@ -58,11 +59,13 @@ public class CategoryController {
     public ResponseEntity deleteCategory(@PathVariable Long id) {
         Optional<Category> categoryFound = categoryRepository.findById(id);
         if (categoryFound.isPresent()) {
+            categoryFound.get().getBook().forEach(book -> {
+                book.getCategories().removeIf(category -> category.getId() == categoryFound.get().getId());
+                bookRepository.save(book);
+            });
             categoryRepository.delete(categoryFound.get());
-            return new ResponseEntity(categoryFound.get(), HttpStatus.OK);
-        } else {
-            return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
         }
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @PostMapping
@@ -78,9 +81,9 @@ public class CategoryController {
     }
 
     @PutMapping
-    public ResponseEntity updateCategory(Category category) {
+    public ResponseEntity updateCategory(@RequestBody Category category) {
         Optional<Category> categoryFound = categoryRepository.findById(category.getId());
-        if (category != null) {
+        if (categoryFound.get() != null) {
             return new ResponseEntity(categoryRepository.save(category), HttpStatus.OK);
         } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);
