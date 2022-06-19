@@ -81,9 +81,9 @@ public class CategoryController {
     }
 
     @PutMapping
-    public ResponseEntity updateCategory(Category category) {
+    public ResponseEntity updateCategory(@RequestBody Category category) {
         Optional<Category> categoryFound = categoryRepository.findById(category.getId());
-        if (category != null) {
+        if (categoryFound.get() != null) {
             return new ResponseEntity(categoryRepository.save(category), HttpStatus.OK);
         } else {
             return new ResponseEntity(new EmptyJsonResponse(), HttpStatus.OK);

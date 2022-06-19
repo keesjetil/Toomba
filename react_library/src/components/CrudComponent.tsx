@@ -15,8 +15,10 @@ interface Category {
 type CrudState = {
   books: any[];
   categories: Category[];
-  visible: boolean
+  visibleCategory: boolean
+  visibleBook:boolean;
   selectedItem: any
+  selectedCategory: any
 };
 
 class CrudComponent extends React.Component<{}, CrudState> {
@@ -24,8 +26,10 @@ class CrudComponent extends React.Component<{}, CrudState> {
   state: CrudState = {
     books: [],
     categories: [],
-    visible: false,
-    selectedItem: null
+    visibleBook: false,
+    visibleCategory: false,
+    selectedItem: null,
+    selectedCategory:null,
   };
 
   componentDidMount() {
@@ -34,7 +38,6 @@ class CrudComponent extends React.Component<{}, CrudState> {
   }
 
   createBook(book: any) {
-    console.log("MY BOOK: ", book)
     console.log(JSON.stringify(book))
     axios.post("http://localhost:8080/api/book", book).then(() => {
       this.getBooks()
@@ -77,10 +80,18 @@ class CrudComponent extends React.Component<{}, CrudState> {
   }
 
   editBook(book: any) {
-    console.log("MY BOOK: ", book)
-    console.log(JSON.stringify(book))
     axios.put("http://localhost:8080/api/book", book).then(() => {
       this.getBooks()
+    }).catch(e => {
+      console.log(e)
+    })
+  }
+
+  editCategory(category: any) {
+    console.log("MY CATEGORY: ", category)
+    axios.put("http://localhost:8080/api/category", category).then(() => {
+      this.getBooks()
+      this.getCategories()
     }).catch(e => {
       console.log(e)
     })
@@ -117,8 +128,12 @@ class CrudComponent extends React.Component<{}, CrudState> {
     })
   }
 
-  setIsModalVisible(item: any, visible: boolean) {
-    this.setState({ selectedItem: item, visible: visible })
+  setIsBookModalVisible(item: any, visible: boolean) {
+    this.setState({ selectedItem: item, visibleBook: visible, selectedCategory:null, visibleCategory: false })
+  }
+
+  setIsCategoryModalVisible(item: any, visible: boolean) {
+    this.setState({ selectedItem: null, visibleCategory: visible,visibleBook: false, selectedCategory:item})
   }
 
 
@@ -153,8 +168,15 @@ class CrudComponent extends React.Component<{}, CrudState> {
       })
       values.categories = categories
       values.id = this.state.selectedItem.id
-      this.setState({visible:false})
+      this.setState({visibleBook:false})
       this.editBook(values)
+    };
+
+    const onFinishEditCategory = (values: any) => {
+      values.id = this.state.selectedCategory.id
+      this.setState({visibleBook:false, visibleCategory:false})
+      console.log("MY VALUES: ", values)
+      this.editCategory(values)
     };
 
     const onFinishFailed = (errorInfo: any) => {
@@ -163,7 +185,6 @@ class CrudComponent extends React.Component<{}, CrudState> {
 
 
     const children = [];
-    console.log("IN RENDER: ", this.state.categories)
     if (this.state.categories.length > 0) {
       for (const category of this.state.categories) {
         children.push(<Option key={category.id}>{category.title}</Option>);
@@ -280,7 +301,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
                     <Typography.Text>Description: <strong>{item.description}</strong></Typography.Text>
                     <Typography.Text>Author: <strong>{item.author}</strong></Typography.Text>
                     <Typography.Text>Categorie: <strong>{JSON.stringify(item.categories)}</strong></Typography.Text>
-                    <Button type="primary" onClick={() => this.setIsModalVisible(item, true)}>
+                    <Button type="primary" onClick={() => this.setIsBookModalVisible(item, true)}>
                       Edit
                     </Button>
                     <Button type="primary" danger onClick={() => this.deleteBookById(item.id)}>
@@ -302,7 +323,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
                   <List.Item>
                     <Typography.Text>{item.id}</Typography.Text>
                     <Typography.Text>Title: <strong>{item.title}</strong></Typography.Text>
-                    <Button type="primary" onClick={() => this.setIsModalVisible(item, true)}>
+                    <Button type="primary" onClick={() => this.setIsCategoryModalVisible(item, true)}>
                       Edit
                     </Button>
                     <Button type="primary" danger onClick={() => this.deleteCategoryById(item.id)}>
@@ -316,7 +337,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
           </Col>
         </Row>
 
-        <Modal title={this.state.selectedItem ? `Item with id ${this.state.selectedItem.id}` : 'dummy'} visible={this.state.visible} footer={null}>
+        <Modal title={this.state.selectedItem ? `Item with id ${this.state.selectedItem.id}` : 'dummy'} visible={this.state.visibleBook} footer={null}>
           <Form
             name="basic"
             labelCol={{ span: 8 }}
@@ -374,7 +395,38 @@ class CrudComponent extends React.Component<{}, CrudState> {
               <Button type="primary" htmlType="submit">
                 Submit Book
               </Button>
-              <Button type="primary" onClick={() => this.setState({visible:false})}>
+              <Button type="primary" onClick={() => this.setState({visibleBook:false})}>
+                Cancel
+              </Button>
+            </Form.Item>
+          </Form>
+        </Modal>
+
+        <Modal title={this.state.selectedCategory ? `Item with id ${this.state.selectedCategory.id}` : 'dummy'} visible={this.state.visibleCategory} footer={null}>
+          <Form
+            name="basic"
+            labelCol={{ span: 8 }}
+            wrapperCol={{ span: 16 }}
+            initialValues={{ remember: true }}
+            onFinish={onFinishEditCategory}
+            onFinishFailed={onFinishFailed}
+            autoComplete="off"
+          >
+
+            <Form.Item
+              label="title"
+              name="title"
+              initialValue={this.state.selectedCategory ? this.state.selectedCategory.title : ''}
+              rules={[{ required: true, message: 'A Category must have a title' }]}
+
+            >
+              <Input />
+            </Form.Item>
+            <Form.Item wrapperCol={{ offset: 8, span: 16 }}>
+              <Button type="primary" htmlType="submit">
+                Submit Category
+              </Button>
+              <Button type="primary" onClick={() => this.setState({visibleCategory:false})}>
                 Cancel
               </Button>
             </Form.Item>
