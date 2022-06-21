@@ -1,14 +1,13 @@
 package com.toomba.library.controllers;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.toomba.library.models.Book;
 import com.toomba.library.models.Category;
 import com.toomba.library.repositories.BookRepository;
@@ -23,6 +22,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
+import utils.EmptyJsonResponse;
+
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BookControllerTest {
@@ -36,21 +37,32 @@ class BookControllerTest {
     @Autowired
     CategoryRepository categoryRepository;
 
-    Book testBook;
+    private Book testBook;
+    private Book resultBook;
+    private EmptyJsonResponse resultJson;
+    private String resultString;
 
-    Book resultBook;
-    HttpStatus resultStatus;
-    Set<Category> categories;
+
+    private List<Book> resultBooks;
+    private HttpStatus resultStatus;
+    private Set<Category> categories;
 
     @BeforeAll
-    @Transactional
     public void setup() {
         categories = new HashSet<>();
         categoryRepository.save(new Category("Horror"));
         categoryRepository.save(new Category("Comedy"));
         categoryRepository.findAll().forEach(category -> categories.add(category));
 
-        testBook  = bookRepository.save(new Book("title", "description", "author", categories));
+        testBook = bookRepository.save(new Book("title", "description", "author", categories));
+    }
+
+    @Test
+    @Transactional
+    void getBooks() {
+        givenBookExists();
+        whenGetBooks();
+        thenBooksRetrieved();
     }
 
     @Test
@@ -62,7 +74,7 @@ class BookControllerTest {
     }
 
     @Test
-    void createBook() throws JsonProcessingException {
+    void createBook() {
         givenCreatedBook();
         whenCreateBook();
         thenBookRetrieved();
@@ -78,22 +90,83 @@ class BookControllerTest {
     }
 
     @Test
-    @Transactional
     void deleteBook() {
         givenBookExists();
         whenDeleteBook();
         thenBookIsRemoved();
     }
 
+    @Test
+    @Transactional
+    void getEmptyBook() {
+        givenBooksDontExist();
+        whenGetEmptyBook();
+        thenReturnEmptyJson();
+    }
+
+    @Test
+    @Transactional
+    void getEmptyBooks() {
+        givenBooksDontExist();
+        whenGetBooks();
+        thenReturnEmptyBooks();
+    }
+
+    @Test
+    @Transactional
+    void creatBookWithEmptyValue() {
+        givenBookWithoutAuthor();
+        whenCreateAuthorlessBook();
+        thenReturnErrorString();
+    }
+
+    @Test
+    @Transactional
+    void updateBookWithEmptyValue() {
+        givenBookExistsAndSetNullAuthor();
+        whenUpdateAuthorlessBook();
+        thenReturnErrorString();
+    }
+
+    @Test
+    @Transactional
+    void updateBookWithNonExistantBook() {
+        givenBookDoesNotExist();
+        whenUpdateEmptyBook();
+        thenReturnEmptyJson();
+    }
+
     //Givens
     private void givenBookExists() {
         testBook = bookRepository.findAll().iterator().next();
     }
-    private void givenCreatedBook(){
+
+    private void givenBookDoesNotExist() {
+
+        testBook = bookRepository.findAll().iterator().next();
+        bookRepository.delete(testBook);
+    }
+
+    private void givenBookExistsAndSetNullAuthor() {
+        testBook = bookRepository.findAll().iterator().next();
+        testBook.setAuthor(null);
+    }
+
+    private void givenBookWithoutAuthor() {
+        testBook = new Book("post", "post", "post", categories);
+        testBook.setAuthor(null);
+    }
+
+
+    private void givenBooksDontExist() {
+        bookRepository.deleteAll();
+    }
+
+    private void givenCreatedBook() {
         testBook = new Book("post", "post", "post", categories);
     }
 
-    private void givenUpdatedBook(){
+    private void givenUpdatedBook() {
         testBook = bookRepository.findById(testBook.getId()).orElseThrow();
         testBook.setAuthor("UPDATE");
         categories.clear();
@@ -102,6 +175,7 @@ class BookControllerTest {
         testBook.setDescription("UPDATE");
     }
 
+
     // Whens
     private void whenGetBook() {
         ResponseEntity result = bookController.getBook(testBook.getId());
@@ -109,11 +183,42 @@ class BookControllerTest {
         resultBook = (Book) result.getBody();
     }
 
-    private void whenCreateBook() throws JsonProcessingException {
+    private void whenGetEmptyBook() {
+        ResponseEntity result = bookController.getBook(testBook.getId());
+        resultStatus = result.getStatusCode();
+        resultJson = (EmptyJsonResponse) result.getBody();
+    }
+
+    private void whenGetBooks() {
+        ResponseEntity result = bookController.getBooks();
+        resultStatus = result.getStatusCode();
+        resultBooks = (List<Book>) result.getBody();
+    }
+
+    private void whenCreateBook() {
         ResponseEntity result = bookController.createBook(testBook);
         resultStatus = result.getStatusCode();
         resultBook = (Book) result.getBody();
     }
+
+    private void whenCreateAuthorlessBook() {
+        ResponseEntity result = bookController.createBook(testBook);
+        resultStatus = result.getStatusCode();
+        resultString = (String) result.getBody();
+    }
+
+    private void whenUpdateAuthorlessBook() {
+        ResponseEntity result = bookController.updateBook(testBook);
+        resultStatus = result.getStatusCode();
+        resultString = (String) result.getBody();
+    }
+
+    private void whenUpdateEmptyBook() {
+        ResponseEntity result = bookController.updateBook(testBook);
+        resultStatus = result.getStatusCode();
+        resultJson = (EmptyJsonResponse) result.getBody();
+    }
+
 
     private void whenDeleteBook() {
         ResponseEntity result = bookController.deleteBook(testBook.getId());
@@ -121,7 +226,7 @@ class BookControllerTest {
         resultBook = (Book) result.getBody();
     }
 
-    private void whenUpdateBook(){
+    private void whenUpdateBook() {
         ResponseEntity result = bookController.updateBook(testBook);
         resultStatus = result.getStatusCode();
         resultBook = (Book) result.getBody();
@@ -137,16 +242,26 @@ class BookControllerTest {
         assertEquals(resultStatus, HttpStatus.OK);
     }
 
-    private void thenBookIsRemoved(){
+    private void thenBooksRetrieved() {
+        Book resultBook = resultBooks.stream().findFirst().get();
+        assertEquals(resultBook.getId(), testBook.getId());
+        assertEquals(resultBook.getDescription(), testBook.getDescription());
+        assertEquals(resultBook.getTitle(), testBook.getTitle());
+        assertEquals(resultBook.getAuthor(), testBook.getAuthor());
+        assertEquals(resultBook.getCategories(), testBook.getCategories());
+        assertEquals(resultStatus, HttpStatus.OK);
+    }
+
+    private void thenBookIsRemoved() {
         assertEquals(resultStatus, HttpStatus.OK);
         assertFalse(bookRepository.findById(testBook.getId()).isPresent());
     }
 
-    private void thenBookInDatabase(){
+    private void thenBookInDatabase() {
         assertTrue(bookRepository.findById(testBook.getId()).isPresent());
     }
 
-    private void thenBookUpdatedInDatabase(){
+    private void thenBookUpdatedInDatabase() {
         assertEquals(resultBook.getId(), testBook.getId());
         assertEquals(resultBook.getDescription(), testBook.getDescription());
         assertEquals(resultBook.getTitle(), testBook.getTitle());
@@ -154,5 +269,20 @@ class BookControllerTest {
         assertEquals(resultBook.getCategories(), testBook.getCategories());
         assertEquals(resultStatus, HttpStatus.OK);
         thenBookInDatabase();
+    }
+
+    private void thenReturnEmptyJson() {
+        assertEquals(resultJson.getClass(), new EmptyJsonResponse().getClass());
+        assertEquals(resultStatus, HttpStatus.OK);
+    }
+
+    private void thenReturnErrorString() {
+        assertTrue(resultString.equals("Dont fill in null values"));
+        assertEquals(resultStatus, HttpStatus.BAD_REQUEST);
+    }
+
+    private void thenReturnEmptyBooks() {
+        assertTrue(resultBooks.isEmpty());
+        assertEquals(resultStatus, HttpStatus.OK);
     }
 }
