@@ -30,7 +30,7 @@ public class Category {
 
     @ManyToMany(mappedBy="categories")
     @JsonIgnore
-    private Set<Book> book;
+    private Set<Book> book = new HashSet<>();
 
     public Category(String title) {
         this.title = title;

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import com.toomba.library.models.Book;
@@ -22,8 +23,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 
-import utils.EmptyJsonResponse;
-
 @SpringBootTest
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class BookControllerTest {
@@ -39,8 +38,7 @@ class BookControllerTest {
 
     private Book testBook;
     private Book resultBook;
-    private EmptyJsonResponse resultJson;
-    private String resultString;
+    private Map<String, Object> resultJson;
 
 
     private List<Book> resultBooks;
@@ -94,6 +92,14 @@ class BookControllerTest {
         givenBookExists();
         whenDeleteBook();
         thenBookIsRemoved();
+    }
+
+    @Test
+    @Transactional
+    void deleteEmpty() {
+        givenBookDoesNotExist();
+        whenDeleteBook();
+        thenBookIsNotRemoved();
     }
 
     @Test
@@ -186,7 +192,7 @@ class BookControllerTest {
     private void whenGetEmptyBook() {
         ResponseEntity result = bookController.getBook(testBook.getId());
         resultStatus = result.getStatusCode();
-        resultJson = (EmptyJsonResponse) result.getBody();
+        resultJson = (Map<String, Object>) result.getBody();
     }
 
     private void whenGetBooks() {
@@ -204,26 +210,26 @@ class BookControllerTest {
     private void whenCreateAuthorlessBook() {
         ResponseEntity result = bookController.createBook(testBook);
         resultStatus = result.getStatusCode();
-        resultString = (String) result.getBody();
+        resultJson = (Map<String, Object>) result.getBody();
     }
 
     private void whenUpdateAuthorlessBook() {
         ResponseEntity result = bookController.updateBook(testBook);
         resultStatus = result.getStatusCode();
-        resultString = (String) result.getBody();
+        resultJson = (Map<String, Object>) result.getBody();
     }
 
     private void whenUpdateEmptyBook() {
         ResponseEntity result = bookController.updateBook(testBook);
         resultStatus = result.getStatusCode();
-        resultJson = (EmptyJsonResponse) result.getBody();
+        resultJson = (Map<String, Object>) result.getBody();
     }
 
 
     private void whenDeleteBook() {
         ResponseEntity result = bookController.deleteBook(testBook.getId());
         resultStatus = result.getStatusCode();
-        resultBook = (Book) result.getBody();
+        resultJson = (Map<String, Object>) result.getBody();
     }
 
     private void whenUpdateBook() {
@@ -254,6 +260,13 @@ class BookControllerTest {
 
     private void thenBookIsRemoved() {
         assertEquals(resultStatus, HttpStatus.OK);
+        assertEquals(resultJson.get("message"), "Deleted book with id: "+testBook.getId());
+        assertFalse(bookRepository.findById(testBook.getId()).isPresent());
+    }
+
+    private void thenBookIsNotRemoved() {
+        assertEquals(resultStatus, HttpStatus.OK);
+        assertEquals(resultJson.get("message"), "Unable to Deleted book with id: "+testBook.getId());
         assertFalse(bookRepository.findById(testBook.getId()).isPresent());
     }
 
@@ -272,12 +285,12 @@ class BookControllerTest {
     }
 
     private void thenReturnEmptyJson() {
-        assertEquals(resultJson.getClass(), new EmptyJsonResponse().getClass());
+        assertEquals(resultJson.get("message"), "No data");
         assertEquals(resultStatus, HttpStatus.OK);
     }
 
     private void thenReturnErrorString() {
-        assertTrue(resultString.equals("Dont fill in null values"));
+        assertTrue(resultJson.get("message").equals("Dont fill in null values"));
         assertEquals(resultStatus, HttpStatus.BAD_REQUEST);
     }
 
