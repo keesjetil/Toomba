@@ -22,6 +22,8 @@ type CrudState = {
 };
 
 class CrudComponent extends React.Component<{}, CrudState> {
+  formRefCat:any = React.createRef();
+  formRefBook:any = React.createRef();
 
   state: CrudState = {
     books: [],
@@ -139,9 +141,10 @@ class CrudComponent extends React.Component<{}, CrudState> {
 
 
   render() {
-    console.log(this.state.selectedItem)
+
     const onFinishCategory = (values: any) => {
       this.createCategory(values)
+      this.formRefCat.current.resetFields()
     };
 
     const onFinishBook = (values: any) => {
@@ -155,6 +158,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
       })
       values.categories = categories
       this.createBook(values)
+      this.formRefBook.current.resetFields()
     };
 
     const onFinishEditBook = (values: any) => {
@@ -175,7 +179,6 @@ class CrudComponent extends React.Component<{}, CrudState> {
     const onFinishEditCategory = (values: any) => {
       values.id = this.state.selectedCategory.id
       this.setState({visibleBook:false, visibleCategory:false})
-      console.log("MY VALUES: ", values)
       this.editCategory(values)
     };
 
@@ -209,6 +212,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
                   onFinish={onFinishBook}
                   onFinishFailed={onFinishFailed}
                   autoComplete="off"
+                  ref={this.formRefBook}
                 >
                   <Form.Item
                     label="title"
@@ -261,6 +265,7 @@ class CrudComponent extends React.Component<{}, CrudState> {
             <Row style={{ margin: 20 }}>
               <Card title={"Add a category here"}>
                 <Form
+                  ref={this.formRefCat}
                   name="basic"
                   labelCol={{ span: 8 }}
                   wrapperCol={{ span: 16 }}
