@@ -1,5 +1,6 @@
 package com.toomba.library.models;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -10,11 +11,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.toomba.library.serializer.BookSerializer;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -38,12 +34,12 @@ public class Book {
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-            name="book_category",
+            name = "book_category",
             joinColumns = @JoinColumn(name = "book_id"),
             inverseJoinColumns = @JoinColumn(name = "category_id"))
-    private Set<Category> categories;
+    private Set<Category> categories = new HashSet<>();
 
-    public Book(String title, String description, String author,Set<Category> categories) {
+    public Book(String title, String description, String author, Set<Category> categories) {
         this.title = title;
         this.description = description;
         this.author = author;
